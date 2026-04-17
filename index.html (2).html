@@ -1,0 +1,1411 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#ffffff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Verstrattor — OS & Diário</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --blue:#1d4ed8;--blue2:#2563eb;--blue3:#eff6ff;--bluebdr:#bfdbfe;
+  --green:#16a34a;--gbg:#f0fdf4;--gbdr:#bbf7d0;
+  --red:#dc2626;--rbg:#fef2f2;--rbdr:#fecaca;
+  --amber:#d97706;--abg:#fffbeb;--abdr:#fde68a;
+  --purple:#7c3aed;--pbg:#f5f3ff;--pbdr:#ddd6fe;
+  --g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g300:#cbd5e1;
+  --g400:#94a3b8;--g500:#64748b;--g600:#475569;--g700:#334155;--g900:#0f172a;
+  --w:#fff;--r:6px;--r2:10px;
+  --sh:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --sh2:0 4px 12px rgba(0,0,0,.1);
+}
+body{font-family:'DM Sans',sans-serif;background:var(--g50);color:var(--g700);font-size:13px;line-height:1.5;min-height:100vh}
+.mono{font-family:'DM Mono',monospace}
+
+/* ── HEADER ── */
+#hdr{position:fixed;top:0;left:0;right:0;height:52px;background:var(--w);border-bottom:1px solid var(--g200);display:flex;align-items:center;justify-content:space-between;padding:0 18px;z-index:100;box-shadow:var(--sh)}
+#hdr-left{display:flex;align-items:center;gap:10px}
+.logo-box{width:34px;height:34px;background:linear-gradient(135deg,#1a56db 0%,#0d2d6e 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.brand-name{font-size:15px;font-weight:700;letter-spacing:-.4px;color:var(--g900)}
+.brand-name em{color:var(--blue);font-style:normal}
+.brand-sub{font-size:10px;color:var(--g400);letter-spacing:.3px;margin-top:1px}
+#hdr-right{display:flex;align-items:center;gap:8px}
+
+/* ── LAYOUT ── */
+#lay{display:flex;padding-top:52px;min-height:calc(100vh - 52px)}
+
+/* ── SIDEBAR ── */
+#sb{width:190px;flex-shrink:0;background:var(--w);border-right:1px solid var(--g200);padding:12px 0 20px;position:fixed;top:52px;bottom:0;overflow-y:auto;z-index:90}
+.sbs{font-size:9px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.9px;padding:10px 14px 4px}
+.nav{display:flex;align-items:center;gap:7px;padding:7px 14px;cursor:pointer;color:var(--g600);transition:all .12s;font-size:12px;font-weight:500}
+.nav:hover{background:var(--g50);color:var(--g900)}
+.nav.on{background:var(--blue);color:#fff;font-weight:700;border-radius:0 var(--r) var(--r) 0;margin-right:8px}
+.nav.on svg{opacity:1}
+.nav svg{flex-shrink:0;opacity:.65}
+.nav .ct{min-width:16px;height:16px;background:var(--blue);color:#fff;border-radius:8px;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-left:auto;padding:0 4px}
+.nav.on .ct{background:#fff;color:var(--blue)}
+.sep{height:1px;background:var(--g100);margin:6px 0}
+.sbl{font-size:10px;color:var(--g400);padding:8px 14px;font-style:italic}
+
+/* ── MAIN ── */
+#main{flex:1;margin-left:190px;padding:20px;min-height:calc(100vh - 52px)}
+.pg{display:none}.pg.on{display:block}
+
+/* ── PAGE HEADER ── */
+.ph{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px;gap:12px;flex-wrap:wrap}
+.ph h1{font-size:20px;font-weight:700;color:var(--g900);letter-spacing:-.4px}
+.ph p{font-size:12px;color:var(--g400);margin-top:2px}
+.pha{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+/* ── CARDS ── */
+.card{background:var(--w);border:1px solid var(--g200);border-radius:var(--r2);box-shadow:var(--sh)}
+.chdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--g100)}
+.ctit{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--g700)}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:var(--r);border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:'DM Sans',sans-serif;transition:all .12s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.bb{background:var(--blue);color:#fff}.bb:hover{background:var(--blue2)}
+.bw{background:var(--w);color:var(--g600);border:1px solid var(--g200)}.bw:hover{background:var(--g50);color:var(--g900)}
+.bgn{background:var(--gbg);color:var(--green);border:1px solid var(--gbdr)}.bgn:hover{background:#dcfce7}
+.brd{background:var(--rbg);color:var(--red);border:1px solid var(--rbdr)}
+.bam{background:var(--abg);color:var(--amber);border:1px solid var(--abdr)}
+.bpu{background:var(--pbg);color:var(--purple);border:1px solid var(--pbdr)}
+.bsm{padding:4px 10px;font-size:11px}
+.bxs{padding:3px 8px;font-size:11px}
+.wa-btn{background:#25D366;color:#fff;border:none}.wa-btn:hover{background:#1ebe5a}
+
+/* ── BADGES ── */
+.bdg{display:inline-flex;align-items:center;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:600;white-space:nowrap}
+.bdg-azul{background:var(--blue3);color:var(--blue);border:1px solid var(--bluebdr)}
+.bdg-verde{background:var(--gbg);color:var(--green);border:1px solid var(--gbdr)}
+.bdg-vermelho{background:var(--rbg);color:var(--red);border:1px solid var(--rbdr)}
+.bdg-amber{background:var(--abg);color:var(--amber);border:1px solid var(--abdr)}
+.bdg-cinza{background:var(--g100);color:var(--g500);border:1px solid var(--g200)}
+.bdg-purple{background:var(--pbg);color:var(--purple);border:1px solid var(--pbdr)}
+
+/* ── FORM ── */
+.fi{width:100%;padding:7px 10px;border:1px solid var(--g200);border-radius:var(--r);font-family:'DM Sans',sans-serif;font-size:12px;color:var(--g700);background:var(--w);transition:border-color .15s}
+.fi:focus{outline:none;border-color:var(--blue)}
+textarea.fi{resize:vertical;min-height:80px}
+label{display:block;font-size:11px;font-weight:600;color:var(--g500);margin-bottom:3px;text-transform:uppercase;letter-spacing:.5px}
+.fg{display:flex;flex-direction:column;gap:0}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.full{grid-column:1/-1}
+
+/* ── MODAL ── */
+.ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(2px);z-index:200;align-items:center;justify-content:center;padding:16px}
+.ov.on{display:flex}
+.modal{background:var(--w);border-radius:var(--r2);box-shadow:var(--sh2);width:100%;max-height:90vh;overflow-y:auto;animation:mIn .15s ease}
+@keyframes mIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.mhdr{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--g200);position:sticky;top:0;background:var(--w);z-index:1}
+.mhdr h2{font-size:14px;font-weight:700;color:var(--g900)}
+.mbody{padding:18px}
+.mftr{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--g100);background:var(--g50)}
+.xb{background:none;border:none;cursor:pointer;font-size:20px;color:var(--g400);line-height:1;padding:2px 4px;transition:color .12s}
+.xb:hover{color:var(--red)}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;background:var(--g100);border-radius:var(--r);padding:3px;margin-bottom:14px}
+.tab{padding:5px 14px;border-radius:4px;cursor:pointer;font-size:12px;font-weight:500;color:var(--g500);transition:all .12s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.tab.on{background:var(--w);color:var(--g900);font-weight:700;box-shadow:var(--sh)}
+
+/* ── TABLE ── */
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{font-size:9px;font-weight:700;color:var(--g400);text-transform:uppercase;letter-spacing:.7px;padding:8px 12px;border-bottom:1px solid var(--g100);text-align:left;white-space:nowrap;background:var(--g50)}
+td{padding:8px 12px;border-bottom:1px solid var(--g100);font-size:12px;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--g50)}
+
+/* ── EMPTY ── */
+.empty{padding:32px;text-align:center;color:var(--g400);font-size:12px}
+
+/* ── NOTIF ── */
+#notif{position:fixed;bottom:20px;right:20px;z-index:500;font-size:12px;font-weight:600;color:#fff;padding:10px 16px;border-radius:var(--r);opacity:0;transform:translateY(8px);transition:all .2s;pointer-events:none;max-width:300px;box-shadow:var(--sh2)}
+
+/* ── OS CARD ── */
+.os-card{background:var(--w);border:1px solid var(--g200);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;transition:box-shadow .15s}
+.os-card:hover{box-shadow:var(--sh2)}
+.os-status-bar{height:3px;width:100%}
+.os-body{padding:14px}
+.os-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--g400);font-weight:500}
+.os-client{font-size:14px;font-weight:700;color:var(--g900);margin:3px 0}
+.os-meta{font-size:11px;color:var(--g500);display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.os-actions{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+
+/* ── DI CARD ── */
+.di-card{background:var(--w);border:1px solid var(--g200);border-radius:var(--r2);box-shadow:var(--sh);overflow:hidden;transition:box-shadow .15s;margin-bottom:10px}
+
+/* ── FOTO GRID ── */
+.foto-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:14px}
+.foto-item{border:1px solid var(--g200);border-radius:var(--r);overflow:hidden;background:var(--g50)}
+.foto-img-wrap{height:160px;position:relative;cursor:pointer;overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--g100)}
+.foto-img-wrap img{width:100%;height:100%;object-fit:cover}
+.foto-placeholder{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--g400);padding:20px;text-align:center}
+.foto-placeholder span{font-size:11px;font-weight:600}
+.foto-placeholder small{font-size:10px;color:var(--g300)}
+.foto-overlay{position:absolute;inset:0;background:rgba(29,78,216,.6);opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center}
+.foto-overlay span{font-size:11px;font-weight:700;color:#fff;letter-spacing:.5px}
+.foto-img-wrap:hover .foto-overlay{opacity:1}
+.foto-badge{position:absolute;top:6px;left:6px;background:var(--blue);color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px}
+.foto-caption{padding:6px 8px;border-top:1px solid var(--g100);background:var(--w)}
+.foto-caption textarea{
+  width:100%;border:none;
+  font-family:'DM Sans',sans-serif;font-size:11px;color:var(--g500);
+  outline:none;background:transparent;
+  resize:none;
+  min-height:38px;
+  line-height:1.6;
+  overflow:hidden;
+  display:block;
+  padding:0;
+  box-sizing:border-box;
+}
+.foto-caption textarea:focus{color:var(--g700)}
+.foto-del{display:flex;gap:6px;padding:5px 8px;border-top:1px solid var(--g100);background:var(--g50)}
+
+/* ── CÂMERA ── */
+#cam-modal{display:none;position:fixed;inset:0;z-index:600;background:#000;flex-direction:column}
+#cam-modal.on{display:flex}
+#cam-video{width:100%;flex:1;object-fit:cover;min-height:0}
+#cam-bar{
+  background:#0f172a;
+  padding:20px 24px;
+  padding-bottom:max(20px,env(safe-area-inset-bottom));
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  flex-shrink:0;min-height:100px;
+  border-top:2px solid #1d4ed8;
+}
+#cam-snap{
+  width:72px;height:72px;border-radius:50%;
+  background:#fff;border:4px solid rgba(255,255,255,.35);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:transform .1s;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+  box-shadow:0 0 0 6px rgba(255,255,255,.1);
+}
+#cam-snap:active{transform:scale(.85)}
+.cam-side-btn{
+  background:rgba(255,255,255,.12);color:#fff;
+  border:1.5px solid rgba(255,255,255,.25);
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  padding:12px 16px;border-radius:10px;cursor:pointer;
+  min-width:84px;text-align:center;
+  -webkit-tap-highlight-color:transparent;
+  flex-shrink:0;
+}
+.cam-side-btn:active{background:rgba(255,255,255,.25)}
+#cam-status{
+  position:absolute;top:8px;left:50%;transform:translateX(-50%);
+  font-size:11px;color:rgba(255,255,255,.5);
+  background:rgba(0,0,0,.4);padding:3px 10px;border-radius:20px;
+  pointer-events:none;white-space:nowrap;
+}
+#cam-canvas{display:none}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--g200);border-radius:3px}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+  #menu-btn{display:flex!important}
+  #sb{position:fixed!important;transform:translateX(-100%);z-index:150;transition:transform .25s ease;box-shadow:4px 0 20px rgba(0,0,0,.2);width:220px!important}
+  #sb.open{transform:translateX(0)!important}
+  #sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:149}
+  #sb-overlay.open{display:block}
+  #main{margin-left:0!important;padding:12px}
+  .g2,.g3{grid-template-columns:1fr}
+  .ph{flex-direction:column;gap:8px}
+  .fg2,.fg3{grid-template-columns:1fr}
+  .foto-grid{grid-template-columns:1fr 1fr}
+  .modal{max-width:96vw!important;width:96vw!important}
+  #hdr-right .hide-mobile{display:none}
+}
+
+/* ── PRINT (para PDF) ── */
+#print-area{position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:'DM Sans',sans-serif;font-size:12px;line-height:1.5;z-index:-1}
+.print-header{background:#0f172a;color:#fff;padding:24px 28px;display:flex;justify-content:space-between;align-items:flex-end}
+.print-logo{font-size:24px;font-weight:800;letter-spacing:-.5px}
+.print-logo span{color:#60a5fa}
+.print-sub{font-size:9px;color:#94a3b8;letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.print-badge{text-align:right}
+.print-badge-label{font-size:8px;color:#94a3b8;text-transform:uppercase;letter-spacing:2px}
+.print-badge-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:#60a5fa;line-height:1.1}
+.print-accent{height:3px;background:#1d4ed8}
+.print-info-row{display:grid;gap:0;border-bottom:1px solid #e2e8f0}
+.print-info-row.cols3{grid-template-columns:1fr 1fr 1fr}
+.print-info-row.cols2{grid-template-columns:1fr 1fr}
+.print-info-cell{padding:10px 16px;border-right:1px solid #e2e8f0}
+.print-info-cell:last-child{border-right:none}
+.print-info-label{font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#94a3b8;margin-bottom:3px}
+.print-info-val{font-size:12px;font-weight:600;color:#0f172a}
+.print-section{background:#0f172a;color:#fff;padding:6px 16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:3px}
+.print-text{padding:14px 16px;font-size:12px;color:#334155;line-height:1.7;border-bottom:1px solid #e2e8f0;white-space:pre-wrap;min-height:100px}
+.print-photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px}
+.print-photo-box{border:1px solid #e2e8f0;border-radius:4px;overflow:hidden}
+.print-photo-box img{width:100%;height:160px;object-fit:cover;display:block}
+.print-photo-caption{padding:5px 8px;font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:1px;font-weight:600;border-top:1px solid #e2e8f0;background:#f8fafc}
+.print-sig{padding:24px;display:flex;justify-content:center}
+.print-sig-box{width:220px;text-align:center}
+.print-sig-line{border-top:1.5px solid #0f172a;margin-top:50px;padding-top:6px}
+.print-sig-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#0f172a}
+.print-sig-sub{font-size:8px;color:#94a3b8;margin-top:2px;text-transform:uppercase;letter-spacing:1px}
+.print-coupon-line{border:none;border-top:2px dashed #cbd5e1;margin:0 16px}
+.print-coupon-label{text-align:center;font-size:8px;color:#cbd5e1;text-transform:uppercase;letter-spacing:2px;padding:5px 0;font-weight:600}
+.print-coupon{margin:0 16px 16px;border:1.5px solid #0f172a;padding:12px 16px;background:#f8fafc;border-radius:4px}
+</style>
+</head>
+<body>
+
+<div id="sb-overlay" onclick="toggleSidebar()"></div>
+
+<!-- HEADER -->
+<div id="hdr">
+  <div id="hdr-left">
+    <button id="menu-btn" onclick="toggleSidebar()" style="display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--blue);align-items:center;justify-content:center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="logo-box">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">Verstra<em>ttor</em></div>
+      <div class="brand-sub">RC Pinturas · OS & Diário de Obra</div>
+    </div>
+  </div>
+  <div id="hdr-right">
+    <button class="btn bw bsm hide-mobile" onclick="exportJSON()">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Backup
+    </button>
+    <label class="btn bw bsm hide-mobile" style="cursor:pointer">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Restaurar
+      <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+    </label>
+  </div>
+</div>
+
+<div id="lay">
+
+<!-- SIDEBAR -->
+<div id="sb">
+  <div class="sbs">Operacional</div>
+  <div class="nav on" data-pg="os" onclick="goto('os')">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Ordens de Serviço
+    <span class="ct" id="ct-os">0</span>
+  </div>
+  <div class="nav" data-pg="diario" onclick="goto('diario')">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+    Diário de Obra
+    <span class="ct" id="ct-di">0</span>
+  </div>
+  <div class="sep"></div>
+  <div class="sbs">Sistema</div>
+  <div class="nav" onclick="exportJSON()">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Backup JSON
+  </div>
+  <label class="nav" style="cursor:pointer">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Restaurar JSON
+    <input type="file" accept=".json" style="display:none" onchange="importJSON(event)">
+  </label>
+  <div class="sep"></div>
+  <div class="sbl">Desenvolvido por<br>Rodrigo N de Carvalho</div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+
+<!-- ══════════ OS PAGE ══════════ -->
+<div class="pg on" id="pg-os">
+  <div class="ph">
+    <div>
+      <h1>Ordens de Serviço</h1>
+      <p>Crie, gerencie e envie relatórios de OS</p>
+    </div>
+    <div class="pha">
+      <select class="fi" style="width:140px;font-size:11px" id="os-filtro" onchange="renderOS()">
+        <option value="">Todos os status</option>
+        <option>EM EXECUÇÃO</option>
+        <option>AGUARDANDO</option>
+        <option>CONCLUÍDO</option>
+      </select>
+      <button class="btn bb" onclick="abrirFormOS()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova OS
+      </button>
+    </div>
+  </div>
+  <div id="os-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px"></div>
+</div>
+
+<!-- ══════════ DIÁRIO PAGE ══════════ -->
+<div class="pg" id="pg-diario">
+  <div class="ph">
+    <div>
+      <h1>Diário de Obra</h1>
+      <p>Registro diário de atividades e ocorrências</p>
+    </div>
+    <div class="pha">
+      <button class="btn bb" onclick="abrirFormDi()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nova Entrada
+      </button>
+    </div>
+  </div>
+  <div id="di-list"></div>
+</div>
+
+<!-- ══════════ OS DETAIL ══════════ -->
+<div class="pg" id="pg-os-det">
+  <div class="ph">
+    <div>
+      <button class="btn bw bsm" onclick="goto('os')" style="margin-bottom:6px">← Voltar</button>
+      <h1 id="det-os-title">OS #0000</h1>
+      <p id="det-os-sub"></p>
+    </div>
+    <div class="pha">
+      <button class="btn bw bsm" onclick="editOSAtual()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>
+      <button class="btn bw bsm" onclick="dupOSAtual()">Duplicar</button>
+      <button class="btn bam bsm" onclick="gerarPDF('os')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        PDF
+      </button>
+      <button class="btn wa-btn bsm" onclick="enviarWhatsApp('os')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        WhatsApp
+      </button>
+    </div>
+  </div>
+  <!-- Conteúdo editável da OS -->
+  <div class="card" id="os-det-card">
+    <div class="chdr">
+      <div class="ctit">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        Dados da Ordem de Serviço
+      </div>
+    </div>
+    <div style="padding:14px">
+      <div class="fg3" style="margin-bottom:12px">
+        <div class="fg"><label>Cliente</label><input class="fi" id="d-cliente" oninput="asSaveOS()"></div>
+        <div class="fg"><label>Data de Execução</label><input class="fi" id="d-data" oninput="asSaveOS()"></div>
+        <div class="fg"><label>Responsável</label><input class="fi" id="d-resp" oninput="asSaveOS()"></div>
+      </div>
+      <div class="fg3" style="margin-bottom:12px">
+        <div class="fg"><label>Endereço / Local</label><input class="fi" id="d-end" oninput="asSaveOS()"></div>
+        <div class="fg"><label>Contato</label><input class="fi" id="d-tel" oninput="asSaveOS()"></div>
+        <div class="fg"><label>Status</label>
+          <select class="fi" id="d-status" onchange="asSaveOS()">
+            <option>EM EXECUÇÃO</option><option>AGUARDANDO</option><option>CONCLUÍDO</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label>Escopo do Serviço e Atividades</label>
+        <textarea class="fi" id="d-escopo" rows="6" oninput="asSaveOS()"></textarea>
+      </div>
+    </div>
+
+    <!-- Fotos -->
+    <div class="chdr" style="border-top:1px solid var(--g100)">
+      <div class="ctit">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Registro Fotográfico
+      </div>
+      <button class="btn bw bxs" onclick="addFotoOS()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        + Foto
+      </button>
+    </div>
+    <div class="foto-grid" id="fotos-os"></div>
+  </div>
+</div>
+
+<!-- ══════════ DIÁRIO DETAIL ══════════ -->
+<div class="pg" id="pg-di-det">
+  <div class="ph">
+    <div>
+      <button class="btn bw bsm" onclick="goto('diario')" style="margin-bottom:6px">← Voltar</button>
+      <h1 id="det-di-title">Diário</h1>
+      <p id="det-di-sub"></p>
+    </div>
+    <div class="pha">
+      <button class="btn bam bsm" onclick="gerarPDF('di')">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        PDF
+      </button>
+      <button class="btn wa-btn bsm" onclick="enviarWhatsApp('di')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        WhatsApp
+      </button>
+    </div>
+  </div>
+  <div class="card" id="di-det-card">
+    <div class="chdr">
+      <div class="ctit">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/></svg>
+        Dados do Diário
+      </div>
+    </div>
+    <div style="padding:14px">
+      <div class="fg3" style="margin-bottom:12px">
+        <div class="fg"><label>Data</label><input class="fi" id="dd-data" oninput="asSaveDi()"></div>
+        <div class="fg"><label>Clima</label>
+          <select class="fi" id="dd-clima" onchange="asSaveDi()">
+            <option>BOM</option><option>NUBLADO</option><option>CHUVOSO</option><option>FRIO</option><option>QUENTE</option>
+          </select>
+        </div>
+        <div class="fg"><label>Responsável</label><input class="fi" id="dd-resp" oninput="asSaveDi()"></div>
+      </div>
+      <div class="fg2" style="margin-bottom:12px">
+        <div class="fg"><label>Obra / Local</label><input class="fi" id="dd-local" oninput="asSaveDi()"></div>
+        <div class="fg"><label>Equipe em Campo</label><input class="fi" id="dd-equipe" oninput="asSaveDi()"></div>
+      </div>
+      <div class="fg" style="margin-bottom:12px">
+        <label>Atividades Realizadas no Dia</label>
+        <textarea class="fi" id="dd-ativ" rows="5" oninput="asSaveDi()"></textarea>
+      </div>
+      <div class="fg">
+        <label>Ocorrências / Observações</label>
+        <textarea class="fi" id="dd-ocorr" rows="4" oninput="asSaveDi()"></textarea>
+      </div>
+    </div>
+    <div class="chdr" style="border-top:1px solid var(--g100)">
+      <div class="ctit">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Registro Fotográfico
+      </div>
+      <button class="btn bw bxs" onclick="addFotoDi()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        + Foto
+      </button>
+    </div>
+    <div class="foto-grid" id="fotos-di"></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /lay -->
+
+<!-- ══════════ MODAIS ══════════ -->
+
+<!-- Nova OS -->
+<div class="ov" id="m-os">
+  <div class="modal" style="max-width:500px">
+    <div class="mhdr"><h2 id="m-os-title">Nova Ordem de Serviço</h2><button class="xb" onclick="closeM('m-os')">×</button></div>
+    <div class="mbody">
+      <div class="fg2" style="margin-bottom:10px">
+        <div class="fg"><label>Número da OS</label><input class="fi" id="f-num" placeholder="2026-0001"></div>
+        <div class="fg"><label>Status</label>
+          <select class="fi" id="f-status"><option>EM EXECUÇÃO</option><option>AGUARDANDO</option><option>CONCLUÍDO</option></select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label>Cliente / Empresa</label><input class="fi" id="f-cli" placeholder="Nome do cliente"></div>
+      <div class="fg2" style="margin-bottom:10px">
+        <div class="fg"><label>Data de Execução</label><input class="fi" id="f-dt" type="date"></div>
+        <div class="fg"><label>Responsável</label><input class="fi" id="f-resp" placeholder="Nome do colaborador"></div>
+      </div>
+      <div class="fg2" style="margin-bottom:10px">
+        <div class="fg"><label>Endereço / Local</label><input class="fi" id="f-end" placeholder="Rua, número, bairro"></div>
+        <div class="fg"><label>Contato</label><input class="fi" id="f-tel" placeholder="(11) 00000-0000"></div>
+      </div>
+      <div class="fg"><label>Escopo inicial</label><textarea class="fi" id="f-esc" rows="3" placeholder="Descreva os serviços..."></textarea></div>
+    </div>
+    <div class="mftr">
+      <button class="btn bw" onclick="closeM('m-os')">Cancelar</button>
+      <button class="btn bb" onclick="salvarFormOS()">Criar OS</button>
+    </div>
+  </div>
+</div>
+
+<!-- Nova Entrada Diário -->
+<div class="ov" id="m-di">
+  <div class="modal" style="max-width:460px">
+    <div class="mhdr"><h2>Nova Entrada — Diário de Obra</h2><button class="xb" onclick="closeM('m-di')">×</button></div>
+    <div class="mbody">
+      <div class="fg2" style="margin-bottom:10px">
+        <div class="fg"><label>Data</label><input class="fi" id="fd-dt" type="date"></div>
+        <div class="fg"><label>Clima</label>
+          <select class="fi" id="fd-clima"><option>BOM</option><option>NUBLADO</option><option>CHUVOSO</option><option>FRIO</option><option>QUENTE</option></select>
+        </div>
+      </div>
+      <div class="fg2" style="margin-bottom:10px">
+        <div class="fg"><label>Obra / Local</label><input class="fi" id="fd-local" placeholder="Nome da obra"></div>
+        <div class="fg"><label>Responsável</label><input class="fi" id="fd-resp" placeholder="Colaborador"></div>
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label>Equipe em Campo</label><input class="fi" id="fd-equipe" placeholder="Nomes dos colaboradores"></div>
+    </div>
+    <div class="mftr">
+      <button class="btn bw" onclick="closeM('m-di')">Cancelar</button>
+      <button class="btn bb" onclick="salvarFormDi()">Criar Entrada</button>
+    </div>
+  </div>
+</div>
+
+<!-- WhatsApp Modal -->
+<div class="ov" id="m-wa">
+  <div class="modal" style="max-width:400px">
+    <div class="mhdr"><h2>Enviar pelo WhatsApp</h2><button class="xb" onclick="closeM('m-wa')">×</button></div>
+    <div class="mbody">
+      <div style="background:var(--gbg);border:1px solid var(--gbdr);border-radius:var(--r);padding:10px 12px;margin-bottom:14px;font-size:11px;color:var(--green)">
+        <strong>Como funciona:</strong> Gere o PDF do documento primeiro. Depois escolha como compartilhar pelo WhatsApp.
+      </div>
+      <div class="fg" style="margin-bottom:14px">
+        <label>Número do WhatsApp (com DDD)</label>
+        <input class="fi" id="wa-num" placeholder="11999999999" type="tel">
+        <div style="font-size:10px;color:var(--g400);margin-top:3px">Somente números, sem espaços ou hífens</div>
+      </div>
+      <div class="fg">
+        <label>Mensagem</label>
+        <textarea class="fi" id="wa-msg" rows="4"></textarea>
+      </div>
+    </div>
+    <div class="mftr">
+      <button class="btn bw" onclick="closeM('m-wa')">Cancelar</button>
+      <button class="btn bam" onclick="gerarPDFeDepois()">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+        Baixar PDF
+      </button>
+      <button class="btn wa-btn" onclick="abrirWA()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        Abrir WhatsApp
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Câmera -->
+<div id="cam-modal">
+  <video id="cam-video" autoplay playsinline muted></video>
+  <canvas id="cam-canvas"></canvas>
+  <div id="cam-bar" style="position:relative">
+    <span id="cam-status">Iniciando câmera...</span>
+    <button class="cam-side-btn" onclick="closeCam()">Cancelar</button>
+    <button id="cam-snap" onclick="snapPhoto()">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.5"><circle cx="12" cy="12" r="8"/></svg>
+    </button>
+    <button class="cam-side-btn" onclick="flipCam()">🔄 Virar</button>
+  </div>
+</div>
+
+<!-- Área de impressão (para PDF) -->
+<div id="print-area"></div>
+
+<div id="notif"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let S = { os: [], di: [] };
+let osAtiva = null;
+let diAtiva = null;
+let waTarget = null; // 'os' | 'di'
+let asTimer  = null;
+
+// Câmera
+let camStream = null;
+let camFacing = 'environment';
+let camTarget = null; // { tipo, fid }
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function init() {
+  const s = localStorage.getItem('rc_v4');
+  if (s) { try { S = JSON.parse(s); } catch(e){} }
+  if (!S.os) S.os = [];
+  if (!S.di) S.di = [];
+  document.getElementById('f-dt').valueAsDate = new Date();
+  document.getElementById('fd-dt').valueAsDate = new Date();
+  renderOS(); renderDi(); updateCounts();
+}
+
+function persist() { localStorage.setItem('rc_v4', JSON.stringify(S)); }
+function updateCounts() {
+  document.getElementById('ct-os').textContent = S.os.length;
+  document.getElementById('ct-di').textContent = S.di.length;
+}
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function goto(pg) {
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.nav').forEach(n => n.classList.remove('on'));
+  document.getElementById('pg-' + pg).classList.add('on');
+  document.querySelector(`[data-pg="${pg}"]`)?.classList.add('on');
+  // fechar sidebar mobile
+  document.getElementById('sb').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('open');
+}
+
+function toggleSidebar() {
+  document.getElementById('sb').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════
+// MODAL HELPERS
+// ═══════════════════════════════════════════════
+function openM(id) { document.getElementById(id).classList.add('on'); }
+function closeM(id) { document.getElementById(id).classList.remove('on'); }
+document.querySelectorAll('.ov').forEach(ov => ov.addEventListener('click', e => { if(e.target===ov) ov.classList.remove('on'); }));
+
+// ═══════════════════════════════════════════════
+// OS — LISTA
+// ═══════════════════════════════════════════════
+function renderOS() {
+  const grid = document.getElementById('os-grid');
+  const filtro = document.getElementById('os-filtro').value;
+  const lista = filtro ? S.os.filter(o => o.status === filtro) : S.os;
+
+  if (lista.length === 0) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;display:block;opacity:.3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>Nenhuma OS encontrada. Clique em "Nova OS" para começar.</p></div>`;
+    return;
+  }
+
+  grid.innerHTML = lista.map(os => {
+    const cor = os.status === 'CONCLUÍDO' ? '#16a34a' : os.status === 'AGUARDANDO' ? '#d97706' : '#1d4ed8';
+    const bdgClass = os.status === 'CONCLUÍDO' ? 'bdg-verde' : os.status === 'AGUARDANDO' ? 'bdg-amber' : 'bdg-azul';
+    return `
+    <div class="os-card">
+      <div class="os-status-bar" style="background:${cor}"></div>
+      <div class="os-body">
+        <div class="os-num mono">#${os.num}</div>
+        <div class="os-client">${os.cliente || 'Cliente não informado'}</div>
+        <div class="os-meta">
+          <span>📅 ${os.data_exec || '—'}</span>
+          <span>👷 ${os.responsavel || '—'}</span>
+        </div>
+        <div style="margin-top:6px"><span class="bdg ${bdgClass}">${os.status || '—'}</span></div>
+        <div class="os-actions">
+          <button class="btn bb bxs" onclick="abrirOS('${os.id}')">Abrir</button>
+          <button class="btn bw bxs" onclick="editOS('${os.id}')">Editar</button>
+          <button class="btn bam bxs" onclick="gerarPDFById('os','${os.id}')">PDF</button>
+          <button class="btn wa-btn bxs" onclick="prepWA('os','${os.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+            WA
+          </button>
+          <button class="btn brd bxs" onclick="delOS('${os.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════
+// OS — FORM CRIAR
+// ═══════════════════════════════════════════════
+function abrirFormOS() {
+  const n = String(S.os.length + 1).padStart(4,'0');
+  document.getElementById('f-num').value = `2026-${n}`;
+  document.getElementById('f-cli').value = '';
+  document.getElementById('f-resp').value = '';
+  document.getElementById('f-end').value = '';
+  document.getElementById('f-tel').value = '';
+  document.getElementById('f-esc').value = '';
+  document.getElementById('f-dt').valueAsDate = new Date();
+  document.getElementById('m-os-title').textContent = 'Nova Ordem de Serviço';
+  openM('m-os');
+  setTimeout(() => document.getElementById('f-cli').focus(), 150);
+}
+
+function salvarFormOS() {
+  const dt = document.getElementById('f-dt').value;
+  const os = {
+    id: Date.now().toString(),
+    num: document.getElementById('f-num').value || `2026-${String(S.os.length+1).padStart(4,'0')}`,
+    cliente: document.getElementById('f-cli').value.toUpperCase() || 'CLIENTE',
+    data_exec: dt ? dt.split('-').reverse().join('/') : '—',
+    responsavel: document.getElementById('f-resp').value.toUpperCase() || '—',
+    endereco: document.getElementById('f-end').value.toUpperCase() || '—',
+    contato: document.getElementById('f-tel').value || '—',
+    status: document.getElementById('f-status').value,
+    escopo: document.getElementById('f-esc').value || '1. Serviços realizados:\n\n2. Materiais utilizados:\n\n3. Observações:',
+    fotos: []
+  };
+  S.os.unshift(os);
+  persist(); renderOS(); updateCounts(); closeM('m-os');
+  notif('OS criada com sucesso!', 'green');
+  abrirOS(os.id);
+}
+
+// ═══════════════════════════════════════════════
+// OS — ABRIR / EDITAR
+// ═══════════════════════════════════════════════
+function abrirOS(id) {
+  const os = S.os.find(o => o.id === id);
+  if (!os) return;
+  osAtiva = id;
+
+  document.getElementById('det-os-title').textContent = `OS #${os.num}`;
+  document.getElementById('det-os-sub').textContent = `${os.cliente} · ${os.data_exec} · ${os.status}`;
+  document.getElementById('d-cliente').value = os.cliente || '';
+  document.getElementById('d-data').value    = os.data_exec || '';
+  document.getElementById('d-resp').value    = os.responsavel || '';
+  document.getElementById('d-end').value     = os.endereco || '';
+  document.getElementById('d-tel').value     = os.contato || '';
+  document.getElementById('d-escopo').value  = os.escopo || '';
+  document.getElementById('d-status').value  = os.status || 'EM EXECUÇÃO';
+
+  const fg = document.getElementById('fotos-os');
+  fg.innerHTML = '';
+  (os.fotos || []).forEach(f => appendFoto('os', f.id, f.src, f.caption));
+
+  // Mostrar página (sem mudar nav)
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.getElementById('pg-os-det').classList.add('on');
+}
+
+function editOSAtual() { editOS(osAtiva); }
+
+function editOS(id) {
+  const os = S.os.find(o => o.id === id);
+  if (!os) return;
+  document.getElementById('f-num').value   = os.num;
+  document.getElementById('f-cli').value   = os.cliente;
+  const dtParts = (os.data_exec || '').split('/');
+  if (dtParts.length === 3) document.getElementById('f-dt').value = `${dtParts[2]}-${dtParts[1]}-${dtParts[0]}`;
+  document.getElementById('f-resp').value  = os.responsavel;
+  document.getElementById('f-end').value   = os.endereco;
+  document.getElementById('f-tel').value   = os.contato;
+  document.getElementById('f-status').value = os.status;
+  document.getElementById('f-esc').value   = os.escopo;
+  document.getElementById('m-os-title').textContent = `Editar OS #${os.num}`;
+  openM('m-os');
+  // Sobrescrever callback de salvar para editar
+  document.querySelector('#m-os .btn.bb').onclick = () => {
+    const dt = document.getElementById('f-dt').value;
+    os.num        = document.getElementById('f-num').value;
+    os.cliente    = document.getElementById('f-cli').value.toUpperCase();
+    os.data_exec  = dt ? dt.split('-').reverse().join('/') : os.data_exec;
+    os.responsavel= document.getElementById('f-resp').value.toUpperCase();
+    os.endereco   = document.getElementById('f-end').value.toUpperCase();
+    os.contato    = document.getElementById('f-tel').value;
+    os.status     = document.getElementById('f-status').value;
+    os.escopo     = document.getElementById('f-esc').value;
+    persist(); renderOS(); updateCounts(); closeM('m-os');
+    if (osAtiva === id) abrirOS(id);
+    notif('OS atualizada!', 'green');
+    document.querySelector('#m-os .btn.bb').onclick = salvarFormOS;
+  };
+}
+
+function asSaveOS() {
+  clearTimeout(asTimer);
+  asTimer = setTimeout(() => {
+    const os = S.os.find(o => o.id === osAtiva);
+    if (!os) return;
+    os.cliente    = document.getElementById('d-cliente').value;
+    os.data_exec  = document.getElementById('d-data').value;
+    os.responsavel= document.getElementById('d-resp').value;
+    os.endereco   = document.getElementById('d-end').value;
+    os.contato    = document.getElementById('d-tel').value;
+    os.status     = document.getElementById('d-status').value;
+    os.escopo     = document.getElementById('d-escopo').value;
+    document.getElementById('det-os-sub').textContent = `${os.cliente} · ${os.data_exec} · ${os.status}`;
+    persist(); renderOS(); updateCounts();
+  }, 800);
+}
+
+function dupOSAtual() {
+  const os = S.os.find(o => o.id === osAtiva);
+  if (!os) return;
+  const nova = JSON.parse(JSON.stringify(os));
+  nova.id  = Date.now().toString();
+  nova.num = `2026-${String(S.os.length+1).padStart(4,'0')}`;
+  S.os.unshift(nova);
+  persist(); renderOS(); updateCounts();
+  notif('OS duplicada!', 'blue');
+}
+
+function delOS(id) {
+  if (!confirm('Excluir esta OS permanentemente?')) return;
+  S.os = S.os.filter(o => o.id !== id);
+  persist(); renderOS(); updateCounts();
+  if (osAtiva === id) { osAtiva = null; goto('os'); }
+  notif('OS excluída', 'red');
+}
+
+// ═══════════════════════════════════════════════
+// DIÁRIO — LISTA
+// ═══════════════════════════════════════════════
+function renderDi() {
+  const c = document.getElementById('di-list');
+  if (S.di.length === 0) {
+    c.innerHTML = `<div class="empty"><p>Nenhuma entrada no diário. Clique em "Nova Entrada" para começar.</p></div>`;
+    return;
+  }
+  c.innerHTML = S.di.map((di, i) => `
+    <div class="di-card">
+      <div style="height:3px;background:var(--purple)"></div>
+      <div class="os-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div>
+            <div class="os-num mono">ENTRADA #${String(i+1).padStart(3,'0')}</div>
+            <div class="os-client">${di.local || 'Obra não informada'}</div>
+            <div class="os-meta">
+              <span>📅 ${di.data || '—'}</span>
+              <span>👷 ${di.responsavel || '—'}</span>
+              <span>🌤️ ${di.clima || '—'}</span>
+            </div>
+          </div>
+          <span class="bdg bdg-purple">${di.equipe ? di.equipe.split(',').length + ' colaborador(es)' : '—'}</span>
+        </div>
+        <div class="os-actions">
+          <button class="btn bb bxs" onclick="abrirDi('${di.id}')">Abrir</button>
+          <button class="btn bam bxs" onclick="gerarPDFById('di','${di.id}')">PDF</button>
+          <button class="btn wa-btn bxs" onclick="prepWA('di','${di.id}')">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a12.8 12.8 0 0 0-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+            WA
+          </button>
+          <button class="btn brd bxs" onclick="delDi('${di.id}')">✕</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+// DIÁRIO — FORM / ABRIR
+// ═══════════════════════════════════════════════
+function abrirFormDi() {
+  document.getElementById('fd-local').value  = '';
+  document.getElementById('fd-resp').value   = '';
+  document.getElementById('fd-equipe').value = '';
+  document.getElementById('fd-dt').valueAsDate = new Date();
+  openM('m-di');
+}
+
+function salvarFormDi() {
+  const dt = document.getElementById('fd-dt').value;
+  const di = {
+    id: Date.now().toString(),
+    data: dt ? dt.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR'),
+    local: document.getElementById('fd-local').value.toUpperCase() || '—',
+    responsavel: document.getElementById('fd-resp').value.toUpperCase() || '—',
+    clima: document.getElementById('fd-clima').value,
+    equipe: document.getElementById('fd-equipe').value.toUpperCase() || '—',
+    atividades: '', ocorrencias: '', fotos: []
+  };
+  S.di.unshift(di);
+  persist(); renderDi(); updateCounts(); closeM('m-di');
+  notif('Entrada criada!', 'green');
+  abrirDi(di.id);
+}
+
+function abrirDi(id) {
+  const di = S.di.find(d => d.id === id);
+  if (!di) return;
+  diAtiva = id;
+  const idx = S.di.findIndex(d => d.id === id);
+  document.getElementById('det-di-title').textContent = `Diário #${String(idx+1).padStart(3,'0')}`;
+  document.getElementById('det-di-sub').textContent   = `${di.local} · ${di.data} · ${di.clima}`;
+  document.getElementById('dd-data').value   = di.data || '';
+  document.getElementById('dd-clima').value  = di.clima || 'BOM';
+  document.getElementById('dd-resp').value   = di.responsavel || '';
+  document.getElementById('dd-local').value  = di.local || '';
+  document.getElementById('dd-equipe').value = di.equipe || '';
+  document.getElementById('dd-ativ').value   = di.atividades || '';
+  document.getElementById('dd-ocorr').value  = di.ocorrencias || '';
+
+  const fg = document.getElementById('fotos-di');
+  fg.innerHTML = '';
+  (di.fotos || []).forEach(f => appendFoto('di', f.id, f.src, f.caption));
+
+  document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+  document.getElementById('pg-di-det').classList.add('on');
+}
+
+function asSaveDi() {
+  clearTimeout(asTimer);
+  asTimer = setTimeout(() => {
+    const di = S.di.find(d => d.id === diAtiva);
+    if (!di) return;
+    di.data       = document.getElementById('dd-data').value;
+    di.clima      = document.getElementById('dd-clima').value;
+    di.responsavel= document.getElementById('dd-resp').value;
+    di.local      = document.getElementById('dd-local').value;
+    di.equipe     = document.getElementById('dd-equipe').value;
+    di.atividades = document.getElementById('dd-ativ').value;
+    di.ocorrencias= document.getElementById('dd-ocorr').value;
+    persist(); renderDi();
+  }, 800);
+}
+
+function delDi(id) {
+  if (!confirm('Excluir esta entrada do diário?')) return;
+  S.di = S.di.filter(d => d.id !== id);
+  persist(); renderDi(); updateCounts();
+  if (diAtiva === id) { diAtiva = null; goto('diario'); }
+  notif('Entrada excluída', 'red');
+}
+
+// ═══════════════════════════════════════════════
+// FOTOS
+// ═══════════════════════════════════════════════
+function addFotoOS() { appendFoto('os', Date.now().toString(), '', ''); saveOSFotos(); }
+function addFotoDi() { appendFoto('di', Date.now().toString(), '', ''); saveDiFotos(); }
+
+function appendFoto(tipo, fid, src, caption) {
+  const grid = document.getElementById(`fotos-${tipo}`);
+  const idx  = grid.children.length + 1;
+  const div  = document.createElement('div');
+  div.className = 'foto-item';
+  div.dataset.fid = fid;
+  div.innerHTML = `
+    <div class="foto-img-wrap" onclick="abrirCam('${tipo}','${fid}')">
+      <span class="foto-badge">FOTO ${idx}</span>
+      ${src
+        ? `<img src="${src}" alt="foto ${idx}">`
+        : `<div class="foto-placeholder">
+             <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".4"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+             <span>Toque para foto</span>
+             <small>Câmera ou Galeria</small>
+           </div>`}
+      <div class="foto-overlay"><span>Trocar</span></div>
+    </div>
+    <div class="foto-caption"><textarea class="foto-leg" data-tipo="${tipo}" placeholder="Legenda da foto..." oninput="autoResizeTA(this);fotoLegSave(this)" rows="2">${caption}</textarea></div>
+    <div class="foto-del">
+      <button class="btn bw bxs" onclick="abrirCam('${tipo}','${fid}')">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Câmera
+      </button>
+      <label class="btn bw bxs" style="cursor:pointer">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        Galeria
+        <input type="file" accept="image/*" style="display:none" onchange="galeriaLoad(event,'${tipo}','${fid}')">
+      </label>
+      <button class="btn brd bxs" onclick="delFoto('${tipo}','${fid}')">✕ Excluir</button>
+    </div>`;
+  grid.appendChild(div);
+  // Auto-resize textarea after append
+  setTimeout(() => {
+    const ta = div.querySelector('.foto-caption textarea');
+    if (ta) autoResizeTA(ta);
+  }, 50);
+}
+
+function setFotoSrc(tipo, fid, src) {
+  const box     = document.querySelector(`[data-fid="${fid}"]`);
+  if (!box) return;
+  const wrap    = box.querySelector('.foto-img-wrap');
+  const badge   = box.querySelector('.foto-badge')?.textContent || 'FOTO';
+  wrap.innerHTML = `
+    <span class="foto-badge">${badge}</span>
+    <img src="${src}" alt="foto">
+    <div class="foto-overlay"><span>Trocar</span></div>`;
+  wrap.onclick = () => abrirCam(tipo, fid);
+  if (tipo === 'os') saveOSFotos(); else saveDiFotos();
+}
+
+function galeriaLoad(e, tipo, fid) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => setFotoSrc(tipo, fid, ev.target.result);
+  r.readAsDataURL(file);
+}
+
+function delFoto(tipo, fid) {
+  const el = document.querySelector(`[data-fid="${fid}"]`);
+  if (el) { el.remove(); renumerar(`fotos-${tipo}`); }
+  if (tipo === 'os') saveOSFotos(); else saveDiFotos();
+}
+
+function renumerar(gid) {
+  document.querySelectorAll(`#${gid} .foto-item`).forEach((b,i) => {
+    const badge = b.querySelector('.foto-badge');
+    if (badge) badge.textContent = `FOTO ${i+1}`;
+  });
+}
+
+function coletarFotos(containerId) {
+  const fotos = [];
+  document.querySelectorAll(`#${containerId} .foto-item`).forEach(box => {
+    const img = box.querySelector('img');
+    const cap = box.querySelector('.foto-caption textarea');
+    fotos.push({ id: box.dataset.fid, src: img ? img.src : '', caption: cap ? cap.value : '' });
+  });
+  return fotos;
+}
+
+function autoResizeTA(el) {
+  el.style.height = 'auto';
+  el.style.height = (el.scrollHeight) + 'px';
+}
+
+function fotoLegSave(el) {
+  const tipo = el.dataset.tipo;
+  if (tipo === 'os') saveOSFotos();
+  else saveDiFotos();
+}
+
+function saveOSFotos() {
+  const os = S.os.find(o => o.id === osAtiva);
+  if (os) { os.fotos = coletarFotos('fotos-os'); persist(); }
+}
+
+function saveDiFotos() {
+  const di = S.di.find(d => d.id === diAtiva);
+  if (di) { di.fotos = coletarFotos('fotos-di'); persist(); }
+}
+
+// ═══════════════════════════════════════════════
+// CÂMERA
+// ═══════════════════════════════════════════════
+function abrirCam(tipo, fid) {
+  camTarget = { tipo, fid };
+  document.getElementById('cam-modal').classList.add('on');
+  startStream();
+}
+
+async function startStream() {
+  stopStream();
+  const status = document.getElementById('cam-status');
+  if (status) status.textContent = 'Iniciando câmera...';
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: camFacing, width:{ideal:1920}, height:{ideal:1080} }, audio: false
+    });
+    const video = document.getElementById('cam-video');
+    video.srcObject = camStream;
+    video.onloadedmetadata = () => {
+      video.play();
+      if (status) status.textContent = camFacing === 'environment' ? '📷 Câmera traseira' : '🤳 Câmera frontal';
+    };
+  } catch(err) {
+    closeCam();
+    notif('Câmera indisponível — use Galeria', 'amber');
+    if (camTarget) {
+      const el = document.querySelector(`[data-fid="${camTarget.fid}"] input[type="file"]`);
+      if (el) el.click();
+    }
+  }
+}
+
+function stopStream() {
+  if (camStream) { camStream.getTracks().forEach(t=>t.stop()); camStream=null; }
+}
+
+function closeCam() {
+  stopStream();
+  document.getElementById('cam-modal').classList.remove('on');
+  document.getElementById('cam-video').srcObject = null;
+}
+
+function flipCam() {
+  camFacing = camFacing==='environment' ? 'user' : 'environment';
+  startStream();
+}
+
+function snapPhoto() {
+  const video  = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+  canvas.width  = video.videoWidth  || 1280;
+  canvas.height = video.videoHeight || 720;
+  const ctx = canvas.getContext('2d');
+  if (camFacing==='user') { ctx.translate(canvas.width,0); ctx.scale(-1,1); }
+  ctx.drawImage(video, 0, 0);
+  const src = canvas.toDataURL('image/jpeg', 0.88);
+  closeCam();
+  if (camTarget) setFotoSrc(camTarget.tipo, camTarget.fid, src);
+  notif('✓ Foto capturada', 'green');
+}
+
+// ═══════════════════════════════════════════════
+// PDF GENERATOR
+// ═══════════════════════════════════════════════
+function buildPrintHTML(tipo, id) {
+  if (tipo === 'os') {
+    const os = S.os.find(o => o.id === id);
+    if (!os) return '';
+    const fotos = (os.fotos || []).filter(f => f.src);
+    const fotoHtml = fotos.length
+      ? `<div class="print-photo-grid">${fotos.map(f=>`
+          <div class="print-photo-box">
+            <img src="${f.src}">
+            <div class="print-photo-caption">${f.caption || 'Sem legenda'}</div>
+          </div>`).join('')}</div>`
+      : `<div style="padding:16px;color:#94a3b8;font-size:11px;text-align:center">Nenhuma foto registrada</div>`;
+
+    return `
+      <div class="print-header">
+        <div>
+          <div class="print-logo">RC <span>Pinturas</span></div>
+          <div class="print-sub">Ordem de Serviço</div>
+        </div>
+        <div class="print-badge">
+          <div class="print-badge-label">Número da OS</div>
+          <div class="print-badge-num">#${os.num}</div>
+        </div>
+      </div>
+      <div class="print-accent"></div>
+      <div class="print-info-row cols3">
+        <div class="print-info-cell"><div class="print-info-label">Cliente</div><div class="print-info-val">${os.cliente||'—'}</div></div>
+        <div class="print-info-cell"><div class="print-info-label">Data de Execução</div><div class="print-info-val">${os.data_exec||'—'}</div></div>
+        <div class="print-info-cell"><div class="print-info-label">Responsável</div><div class="print-info-val">${os.responsavel||'—'}</div></div>
+      </div>
+      <div class="print-info-row cols3">
+        <div class="print-info-cell"><div class="print-info-label">Endereço / Local</div><div class="print-info-val">${os.endereco||'—'}</div></div>
+        <div class="print-info-cell"><div class="print-info-label">Contato</div><div class="print-info-val">${os.contato||'—'}</div></div>
+        <div class="print-info-cell"><div class="print-info-label">Status</div><div class="print-info-val">${os.status||'—'}</div></div>
+      </div>
+      <div class="print-section">Escopo do Serviço e Atividades</div>
+      <div class="print-text">${(os.escopo||'').replace(/</g,'&lt;')}</div>
+      <div class="print-section">Registro Fotográfico</div>
+      ${fotoHtml}
+      <div class="print-sig">
+        <div class="print-sig-box">
+          <div class="print-sig-line">
+            <div class="print-sig-label">Assinatura do Responsável</div>
+            <div class="print-sig-sub">Validação de Execução</div>
+          </div>
+        </div>
+      </div>
+      <hr class="print-coupon-line">
+      <div class="print-coupon-label">✂ Canhoto para Arquivo Interno</div>
+      <div class="print-coupon">
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+          <div><div class="print-info-label">Protocolo OS</div><strong>#${os.num}</strong></div>
+          <div style="text-align:right"><div class="print-info-label">Data de Entrega</div><span>__/__/____</span></div>
+        </div>
+        <div><div class="print-info-label">Observação</div><em style="color:#64748b">Relatório entregue conforme execução em campo.</em></div>
+      </div>`;
+  } else {
+    const di = S.di.find(d => d.id === id);
+    if (!di) return '';
+    const idx = S.di.findIndex(d => d.id === id);
+    const fotos = (di.fotos || []).filter(f => f.src);
+    const fotoHtml = fotos.length
+      ? `<div class="print-photo-grid">${fotos.map(f=>`
+          <div class="print-photo-box">
+            <img src="${f.src}">
+            <div class="print-photo-caption">${f.caption || 'Sem legenda'}</div>
+          </div>`).join('')}</div>`
+      : `<div style="padding:16px;color:#94a3b8;font-size:11px;text-align:center">Nenhuma foto registrada</div>`;
+
+    return `
+      <div class="print-header">
+        <div>
+          <div class="print-logo">RC <span>Pinturas</span></div>
+          <div class="print-sub">Diário de Obra</div>
+        </div>
+        <div class="print-badge">
+          <div class="print-badge-label">Entrada</div>
+          <div class="print-badge-num">#${String(idx+1).padStart(3,'0')}</div>
+        </div>
+      </div>
+      <div class="print-accent"></div>
+      <div class="print-info-row cols3">
+        <div class="print-info-cell"><div class="print-info-label">Data</div><div class="print-info-val">${di.data||'—'}</div></div>
+        <div class="print-info-cell"><div class="print-info-label">Clima</div><div class="print-info-val">${di.clima||'—'}</div></div>
+        <div class="print-info-cell"><div class="print-info-label">Responsável</div><div class="print-info-val">${di.responsavel||'—'}</div></div>
+      </div>
+      <div class="print-info-row cols2">
+        <div class="print-info-cell"><div class="print-info-label">Obra / Local</div><div class="print-info-val">${di.local||'—'}</div></div>
+        <div class="print-info-cell"><div class="print-info-label">Equipe em Campo</div><div class="print-info-val">${di.equipe||'—'}</div></div>
+      </div>
+      <div class="print-section">Atividades Realizadas no Dia</div>
+      <div class="print-text">${(di.atividades||'—').replace(/</g,'&lt;')}</div>
+      <div class="print-section">Ocorrências / Observações</div>
+      <div class="print-text" style="min-height:80px">${(di.ocorrencias||'—').replace(/</g,'&lt;')}</div>
+      <div class="print-section">Registro Fotográfico</div>
+      ${fotoHtml}
+      <div class="print-sig">
+        <div class="print-sig-box">
+          <div class="print-sig-line">
+            <div class="print-sig-label">Assinatura do Responsável</div>
+            <div class="print-sig-sub">Diário de Obra — Validação</div>
+          </div>
+        </div>
+      </div>`;
+  }
+}
+
+async function gerarPDF(tipo) {
+  const id = tipo === 'os' ? osAtiva : diAtiva;
+  await gerarPDFById(tipo, id);
+}
+
+async function gerarPDFById(tipo, id) {
+  if (!id) return notif('Nenhum documento selecionado', 'amber');
+
+  notif('Gerando PDF...', 'blue');
+
+  const area = document.getElementById('print-area');
+  area.innerHTML = buildPrintHTML(tipo, id);
+  area.style.left = '0';
+  area.style.zIndex = '9999';
+  area.style.top = '0';
+  area.style.position = 'fixed';
+
+  await new Promise(r => setTimeout(r, 400));
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const canvas = await html2canvas(area, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#fff' });
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+    const pW = pdf.internal.pageSize.getWidth();
+    const pH = pdf.internal.pageSize.getHeight();
+    const iRatio = canvas.height / canvas.width;
+    const iH = pW * iRatio;
+    let y = 0;
+    if (iH <= pH) {
+      pdf.addImage(imgData, 'JPEG', 0, 0, pW, iH);
+    } else {
+      let remaining = canvas.height;
+      let srcY = 0;
+      while (remaining > 0) {
+        const sliceH = Math.min(canvas.width * (pH / pW), remaining);
+        const tmpC = document.createElement('canvas');
+        tmpC.width = canvas.width; tmpC.height = sliceH;
+        tmpC.getContext('2d').drawImage(canvas, 0, srcY, canvas.width, sliceH, 0, 0, canvas.width, sliceH);
+        if (y > 0) pdf.addPage();
+        pdf.addImage(tmpC.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, pW, sliceH * pW / canvas.width);
+        srcY += sliceH; remaining -= sliceH; y++;
+      }
+    }
+
+    const obj = tipo === 'os' ? S.os.find(o=>o.id===id) : S.di.find(d=>d.id===id);
+    const nome = tipo === 'os' ? `OS_${obj?.num||id}` : `Diario_${obj?.data?.replace(/\//g,'-')||id}`;
+    pdf.save(`RC_Pinturas_${nome}.pdf`);
+    notif('✓ PDF gerado e baixado!', 'green');
+  } catch(e) {
+    notif('Erro ao gerar PDF. Tente novamente.', 'red');
+    console.error(e);
+  } finally {
+    area.style.left = '-9999px';
+    area.style.top = '0';
+    area.style.position = 'fixed';
+    area.style.zIndex = '-1';
+  }
+}
+
+// ═══════════════════════════════════════════════
+// WHATSAPP
+// ═══════════════════════════════════════════════
+function prepWA(tipo, id) {
+  if (tipo === 'os') { osAtiva = id; }
+  else { diAtiva = id; }
+  waTarget = tipo;
+
+  const obj = tipo === 'os' ? S.os.find(o=>o.id===id) : S.di.find(d=>d.id===id);
+  let msg = '';
+  if (tipo === 'os') {
+    msg = `*RC PINTURAS — Ordem de Serviço #${obj?.num}*\n\n` +
+          `📋 *Cliente:* ${obj?.cliente}\n` +
+          `📅 *Data:* ${obj?.data_exec}\n` +
+          `👷 *Responsável:* ${obj?.responsavel}\n` +
+          `📍 *Local:* ${obj?.endereco}\n` +
+          `🔧 *Status:* ${obj?.status}\n\n` +
+          `Segue em anexo o relatório em PDF.\n\n_RC Pinturas_`;
+  } else {
+    msg = `*RC PINTURAS — Diário de Obra*\n\n` +
+          `📅 *Data:* ${obj?.data}\n` +
+          `🌤️ *Clima:* ${obj?.clima}\n` +
+          `👷 *Responsável:* ${obj?.responsavel}\n` +
+          `🏗️ *Obra:* ${obj?.local}\n\n` +
+          `Segue em anexo o relatório em PDF.\n\n_RC Pinturas_`;
+  }
+  document.getElementById('wa-msg').value = msg;
+  document.getElementById('wa-num').value = '';
+  openM('m-wa');
+}
+
+function enviarWhatsApp(tipo) { prepWA(tipo, tipo==='os' ? osAtiva : diAtiva); }
+
+function abrirWA() {
+  const num = document.getElementById('wa-num').value.replace(/\D/g,'');
+  const msg = document.getElementById('wa-msg').value;
+  if (!msg) return notif('Preencha a mensagem', 'amber');
+  const enc = encodeURIComponent(msg);
+  const url = num
+    ? `https://wa.me/55${num}?text=${enc}`
+    : `https://wa.me/?text=${enc}`;
+  window.open(url, '_blank');
+  closeM('m-wa');
+}
+
+function gerarPDFeDepois() {
+  closeM('m-wa');
+  gerarPDF(waTarget || 'os');
+}
+
+// ═══════════════════════════════════════════════
+// BACKUP / RESTAURAR
+// ═══════════════════════════════════════════════
+function exportJSON() {
+  saveOSFotos(); saveDiFotos();
+  const blob = new Blob([JSON.stringify(S,null,2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rc_pinturas_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  notif('✓ Backup exportado', 'green');
+}
+
+function importJSON(e) {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!confirm(`Importar backup?\nOS: ${(data.os||[]).length} · Diário: ${(data.di||[]).length}\n\nDados serão mesclados.`)) return;
+      const eOS = new Set(S.os.map(o=>o.id));
+      const eDI = new Set(S.di.map(d=>d.id));
+      (data.os||[]).forEach(o=>{ if(!eOS.has(o.id)) S.os.push(o); });
+      (data.di||[]).forEach(d=>{ if(!eDI.has(d.id)) S.di.push(d); });
+      persist(); renderOS(); renderDi(); updateCounts();
+      notif('✓ Backup restaurado!', 'green');
+    } catch(err) { alert('Arquivo inválido.'); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+}
+
+// ═══════════════════════════════════════════════
+// NOTIF / HELPERS
+// ═══════════════════════════════════════════════
+let ntTimer;
+function notif(msg, tipo='green') {
+  clearTimeout(ntTimer);
+  const el = document.getElementById('notif');
+  const cores = { green:'#16a34a', blue:'#1d4ed8', red:'#dc2626', amber:'#d97706' };
+  el.style.background = cores[tipo] || cores.green;
+  el.textContent = msg;
+  el.style.opacity = '1'; el.style.transform = 'translateY(0)';
+  ntTimer = setTimeout(() => { el.style.opacity='0'; el.style.transform='translateY(8px)'; }, 2800);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') {
+    closeCam();
+    document.querySelectorAll('.ov.on').forEach(o=>o.classList.remove('on'));
+  }
+  if ((e.ctrlKey||e.metaKey) && e.key==='s') { e.preventDefault(); saveOSFotos(); saveDiFotos(); persist(); notif('✓ Salvo','green'); }
+});
+
+init();
+</script>
+</body>
+</html>
