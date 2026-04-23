@@ -5627,4 +5627,219 @@ document.querySelectorAll('.ov input').forEach(inp=>{
   });
 });
 // Tab na tabela de orçamento — já funciona nativamente entre inputs
+</script><script>
+// --- VARIÁVEIS GLOBAIS E ESTADO ---
+let DB = {
+    obras:[], orcamentos:[], cronograma:[], gastos:[], pagamentos:[],
+    contas_pagar:[], contas_receber:[], colaboradores:[], epis:[], 
+    veiculos:[], manutencoes:[], agenda:[], os:[], usuarios:[]
+};
+
+let USUARIO_ATUAL = null;
+let FB_OK = false;
+let dbRef = null;
+
+// --- CONFIGURAÇÃO FIREBASE ---
+const FIREBASE_CONFIG = {
+    apiKey: localStorage.getItem('fb_apiKey') || 'AIzaSyA...', // Substitua pela sua chave se necessário
+    authDomain: (localStorage.getItem('fb_projectid') || 'verstrattor-rc') + ".firebaseapp.com",
+    databaseURL: localStorage.getItem('fb_dburl') || 'https://verstrattor-rc-default-rtdb.firebaseio.com',
+    projectId: localStorage.getItem('fb_projectid') || 'verstrattor-rc',
+    storageBucket: (localStorage.getItem('fb_projectid') || 'verstrattor-rc') + ".appspot.com",
+};
+
+// --- FUNÇÕES DE SUPORTE (LocalStorage) ---
+const sv = (k, v) => localStorage.setItem('v5_' + k, JSON.stringify(v));
+const ld = (k) => JSON.parse(localStorage.getItem('v5_' + k));
+
+// --- INICIALIZAÇÃO DO SISTEMA ---
+function ini() {
+    console.log("Iniciando Verstrattor v5...");
+    
+    // 1. Carrega dados locais (Cache)
+    Object.keys(DB).forEach(key => {
+        const local = ld(key);
+        if(local) DB[key] = local;
+    });
+
+    // 2. Tenta Conectar ao Firebase
+    conectarFirebase();
+
+    // 3. Verifica Sessão
+    if (sessionStorage.getItem('logado') === 'true') {
+        USUARIO_ATUAL = JSON.parse(sessionStorage.getItem('user_data'));
+        document.getElementById('login-screen').style.display = 'none';
+        prepararInterfaceUsuario();
+    }
+
+    // 4. Renderiza Interface
+    rDash();
+    atuTopo();
+}
+
+function conectarFirebase() {
+    try {
+        if (!firebase.apps.length) {
+            firebase.initializeApp(FIREBASE_CONFIG);
+        }
+        dbRef = firebase.database().ref('verstrattor_v5');
+        
+        // Teste de conexão
+        firebase.database().ref('.info/connected').on('value', snap => {
+            if (snap.val() === true) {
+                FB_OK = true;
+                document.getElementById('sync-dot').style.background = 'var(--green)';
+                document.getElementById('sync-status').textContent = 'Conectado Cloud';
+                syncAgora(); // Busca dados assim que conecta
+            } else {
+                FB_OK = false;
+                document.getElementById('sync-dot').style.background = 'var(--amber)';
+                document.getElementById('sync-status').textContent = 'Offline (Local)';
+            }
+        });
+    } catch (e) {
+        console.error("Erro Firebase:", e);
+        document.getElementById('sync-status').textContent = 'Erro de Config';
+    }
+}
+
+// --- SINCRONIZAÇÃO ---
+async function syncAgora() {
+    if (!FB_OK) {
+        notif('Sem conexão com a nuvem', 'var(--amber)');
+        return;
+    }
+    
+    document.getElementById('sync-status').textContent = 'Sincronizando...';
+    
+    try {
+        const snapshot = await dbRef.once('value');
+        const cloudData = snapshot.val();
+        
+        if (cloudData) {
+            // Atualiza o DB global e o localStorage
+            Object.keys(cloudData).forEach(key => {
+                DB[key] = cloudData[key] || [];
+                sv(key, DB[key]);
+            });
+            notif('Dados atualizados da Nuvem');
+            rDash(); // Atualiza a tela
+            atuTopo();
+        }
+    } catch (err) {
+        console.error("Erro no Sync:", err);
+        notif('Erro ao baixar dados', 'var(--red)');
+    } finally {
+        document.getElementById('sync-status').textContent = 'Sincronizado';
+    }
+}
+
+// Enviar dados para o Firebase
+function pushFirebase() {
+    if(!FB_OK) return;
+    dbRef.set(DB).then(() => {
+        console.log("Cloud atualizada");
+    }).catch(e => console.error("Erro ao subir dados:", e));
+}
+
+// --- LOGIN ---
+function fazerLogin() {
+    const user = document.getElementById('login-user').value.trim();
+    const pass = document.getElementById('login-pass').value;
+    const erro = document.getElementById('login-erro');
+
+    // Admin padrão ou busca no DB de usuários
+    if ((user === 'admin' && pass === '1234') || (user === 'Rodrigo' && pass === 'rc2024')) {
+        USUARIO_ATUAL = { nome: user, nivel: 'admin' };
+        sessionStorage.setItem('logado', 'true');
+        sessionStorage.setItem('user_data', JSON.stringify(USUARIO_ATUAL));
+        document.getElementById('login-screen').style.display = 'none';
+        prepararInterfaceUsuario();
+        notif('Bem-vindo, ' + user);
+    } else {
+        erro.textContent = 'Usuário ou senha incorretos';
+    }
+}
+
+function prepararInterfaceUsuario() {
+    document.getElementById('hdr-usuario').textContent = USUARIO_ATUAL.nome;
+    document.getElementById('hdr-usuario').style.display = 'block';
+    document.getElementById('btn-logout').style.display = 'flex';
+    if(USUARIO_ATUAL.nivel === 'admin') {
+        document.getElementById('btn-usuarios').style.display = 'flex';
+    }
+}
+
+function logout() {
+    sessionStorage.clear();
+    location.reload();
+}
+
+// --- DASHBOARD E UI ---
+function rDash() {
+    // Aqui viria sua lógica de renderização do Dashboard
+    // Exemplo simplificado:
+    const agendaCont = document.getElementById('dash-agenda');
+    if(DB.agenda.length === 0) {
+        agendaCont.innerHTML = '<div class="empty">Nenhuma anotação</div>';
+    } else {
+        // ... renderiza agenda
+    }
+}
+
+function atuTopo() {
+    document.getElementById('ct-obras').textContent = DB.obras.length;
+    document.getElementById('ct-os').textContent = DB.os.length;
+    document.getElementById('ct-orc').textContent = DB.orcamentos.length;
+    document.getElementById('ct-pagar').textContent = DB.contas_pagar.length;
+    document.getElementById('ct-rec').textContent = DB.contas_receber.length;
+    document.getElementById('ct-colab').textContent = DB.colaboradores.length;
+}
+
+// Navegação SideBar
+document.querySelectorAll('.nav').forEach(el => {
+    el.addEventListener('click', () => {
+        const pg = el.getAttribute('data-pg');
+        if(pg) goto(pg);
+    });
+});
+
+function goto(pgId) {
+    document.querySelectorAll('.pg').forEach(p => p.classList.remove('on'));
+    document.querySelectorAll('.nav').forEach(n => n.classList.remove('on'));
+    
+    const target = document.getElementById('pg-' + pgId);
+    if(target) target.classList.add('on');
+    
+    const nav = document.querySelector(`.nav[data-pg="${pgId}"]`);
+    if(nav) nav.classList.add('on');
+}
+
+function notif(msg, cor = 'var(--blue)') {
+    const n = document.getElementById('notif');
+    n.textContent = msg;
+    n.style.background = cor;
+    n.style.opacity = 1;
+    n.style.transform = 'translateY(0)';
+    setTimeout(() => {
+        n.style.opacity = 0;
+        n.style.transform = 'translateY(8px)';
+    }, 3000);
+}
+
+// Inicializar quando o documento estiver pronto
+window.addEventListener('DOMContentLoaded', ini);
+
+// Eventos de teclado e Modal (seu código original de fechamento)
+const ov = document.getElementById('ov');
+if(ov) {
+    ov.addEventListener('click', e => {
+        if(e.target === ov) {
+            ov.classList.remove('on');
+        }
+    });
+}
+
 </script>
+</body>
+</html>
